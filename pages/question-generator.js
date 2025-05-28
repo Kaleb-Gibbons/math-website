@@ -2,48 +2,94 @@ import { useState } from 'react'
 import Head from 'next/head'
 import styles from '../styles/QuestionGenerator.module.css'
 
-export default function QuestionGenerator() {
-  const [difficulty, setDifficulty] = useState('medium')
-  const [topic, setTopic] = useState('algebra')
-  const [question, setQuestion] = useState('')
-  const [answer, setAnswer] = useState('')
-
-  const generateQuestion = () => {
-    // This is a placeholder for the actual question generation logic
-    const questions = {
-      algebra: {
-        easy: {
-          question: "Solve for x: 2x + 5 = 13",
-          answer: "x = 4"
-        },
-        medium: {
-          question: "Solve for x: 3x² + 2x - 5 = 0",
-          answer: "x = 1 or x = -5/3"
-        },
-        hard: {
-          question: "Solve the system: 2x + 3y = 7, 4x - y = 5",
-          answer: "x = 2, y = 1"
-        }
+// This structure makes it easy to add new units and sections
+const questionBank = {
+  algebra: {
+    name: "Algebra",
+    sections: {
+      linearEquations: {
+        name: "Linear Equations",
+        questions: [
+          {
+            question: "Solve for x: 2x + 5 = 13",
+            answer: "x = 4"
+          },
+          {
+            question: "Solve for x: 3x - 7 = 8",
+            answer: "x = 5"
+          }
+        ]
       },
-      geometry: {
-        easy: {
-          question: "Find the area of a square with side length 5",
-          answer: "25 square units"
-        },
-        medium: {
-          question: "Find the volume of a cylinder with radius 3 and height 4",
-          answer: "36π cubic units"
-        },
-        hard: {
-          question: "Prove that the sum of angles in a triangle is 180 degrees",
-          answer: "Using parallel lines and alternate angles"
-        }
+      quadraticEquations: {
+        name: "Quadratic Equations",
+        questions: [
+          {
+            question: "Solve for x: x² + 5x + 6 = 0",
+            answer: "x = -2 or x = -3"
+          },
+          {
+            question: "Solve for x: 2x² - 8x + 6 = 0",
+            answer: "x = 1 or x = 3"
+          }
+        ]
       }
     }
+  },
+  geometry: {
+    name: "Geometry",
+    sections: {
+      area: {
+        name: "Area and Perimeter",
+        questions: [
+          {
+            question: "Find the area of a square with side length 5",
+            answer: "25 square units"
+          },
+          {
+            question: "Find the perimeter of a rectangle with length 6 and width 4",
+            answer: "20 units"
+          }
+        ]
+      },
+      volume: {
+        name: "Volume",
+        questions: [
+          {
+            question: "Find the volume of a cylinder with radius 3 and height 4",
+            answer: "36π cubic units"
+          },
+          {
+            question: "Find the volume of a cube with side length 3",
+            answer: "27 cubic units"
+          }
+        ]
+      }
+    }
+  }
+}
 
-    const selectedQuestion = questions[topic][difficulty]
-    setQuestion(selectedQuestion.question)
-    setAnswer(selectedQuestion.answer)
+export default function QuestionGenerator() {
+  const [selectedUnit, setSelectedUnit] = useState('')
+  const [selectedSection, setSelectedSection] = useState('')
+  const [currentQuestion, setCurrentQuestion] = useState(null)
+
+  const handleUnitChange = (unit) => {
+    setSelectedUnit(unit)
+    setSelectedSection('')
+    setCurrentQuestion(null)
+  }
+
+  const handleSectionChange = (section) => {
+    setSelectedSection(section)
+    setCurrentQuestion(null)
+  }
+
+  const generateQuestion = () => {
+    if (!selectedUnit || !selectedSection) return
+
+    const questions = questionBank[selectedUnit].sections[selectedSection].questions
+    const randomIndex = Math.floor(Math.random() * questions.length)
+    setCurrentQuestion(questions[randomIndex])
   }
 
   return (
@@ -58,47 +104,54 @@ export default function QuestionGenerator() {
 
         <div className={styles.controls}>
           <div className={styles.controlGroup}>
-            <label>Difficulty:</label>
+            <label>Unit:</label>
             <select 
-              value={difficulty} 
-              onChange={(e) => setDifficulty(e.target.value)}
+              value={selectedUnit} 
+              onChange={(e) => handleUnitChange(e.target.value)}
               className={styles.select}
             >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
+              <option value="">Select a Unit</option>
+              {Object.entries(questionBank).map(([key, unit]) => (
+                <option key={key} value={key}>{unit.name}</option>
+              ))}
             </select>
           </div>
 
-          <div className={styles.controlGroup}>
-            <label>Topic:</label>
-            <select 
-              value={topic} 
-              onChange={(e) => setTopic(e.target.value)}
-              className={styles.select}
-            >
-              <option value="algebra">Algebra</option>
-              <option value="geometry">Geometry</option>
-            </select>
-          </div>
+          {selectedUnit && (
+            <div className={styles.controlGroup}>
+              <label>Section:</label>
+              <select 
+                value={selectedSection} 
+                onChange={(e) => handleSectionChange(e.target.value)}
+                className={styles.select}
+              >
+                <option value="">Select a Section</option>
+                {Object.entries(questionBank[selectedUnit].sections).map(([key, section]) => (
+                  <option key={key} value={key}>{section.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <button 
-            onClick={generateQuestion}
-            className={styles.generateButton}
-          >
-            Generate Question
-          </button>
+          {selectedSection && (
+            <button 
+              onClick={generateQuestion}
+              className={styles.generateButton}
+            >
+              Generate Question
+            </button>
+          )}
         </div>
 
-        {question && (
+        {currentQuestion && (
           <div className={styles.questionContainer}>
             <div className={styles.question}>
               <h2>Question:</h2>
-              <p>{question}</p>
+              <p>{currentQuestion.question}</p>
             </div>
             <div className={styles.answer}>
               <h2>Answer:</h2>
-              <p>{answer}</p>
+              <p>{currentQuestion.answer}</p>
             </div>
           </div>
         )}
