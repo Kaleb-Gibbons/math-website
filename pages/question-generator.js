@@ -7,63 +7,15 @@ const questionBank = {
   algebra: {
     name: "Algebra",
     sections: {
-      linearEquations: {
-        name: "Linear Equations",
-        questions: [
-          {
-            question: "Solve for x: 2x + 5 = 13",
-            answer: "x = 4"
-          },
-          {
-            question: "Solve for x: 3x - 7 = 8",
-            answer: "x = 5"
-          }
-        ]
-      },
-      quadraticEquations: {
-        name: "Quadratic Equations",
-        questions: [
-          {
-            question: "Solve for x: x² + 5x + 6 = 0",
-            answer: "x = -2 or x = -3"
-          },
-          {
-            question: "Solve for x: 2x² - 8x + 6 = 0",
-            answer: "x = 1 or x = 3"
-          }
-        ]
-      }
+      linearEquations: { name: "Linear Equations" },
+      quadraticEquations: { name: "Quadratic Equations" }
     }
   },
   geometry: {
     name: "Geometry",
     sections: {
-      area: {
-        name: "Area and Perimeter",
-        questions: [
-          {
-            question: "Find the area of a square with side length 5",
-            answer: "25 square units"
-          },
-          {
-            question: "Find the perimeter of a rectangle with length 6 and width 4",
-            answer: "20 units"
-          }
-        ]
-      },
-      volume: {
-        name: "Volume",
-        questions: [
-          {
-            question: "Find the volume of a cylinder with radius 3 and height 4",
-            answer: "36π cubic units"
-          },
-          {
-            question: "Find the volume of a cube with side length 3",
-            answer: "27 cubic units"
-          }
-        ]
-      }
+      area: { name: "Area and Perimeter" },
+      volume: { name: "Volume" }
     }
   }
 }
@@ -72,24 +24,44 @@ export default function QuestionGenerator() {
   const [selectedUnit, setSelectedUnit] = useState('')
   const [selectedSection, setSelectedSection] = useState('')
   const [currentQuestion, setCurrentQuestion] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleUnitChange = (unit) => {
     setSelectedUnit(unit)
     setSelectedSection('')
     setCurrentQuestion(null)
+    setError('')
   }
 
   const handleSectionChange = (section) => {
     setSelectedSection(section)
     setCurrentQuestion(null)
+    setError('')
   }
 
-  const generateQuestion = () => {
+  const generateQuestion = async () => {
     if (!selectedUnit || !selectedSection) return
-
-    const questions = questionBank[selectedUnit].sections[selectedSection].questions
-    const randomIndex = Math.floor(Math.random() * questions.length)
-    setCurrentQuestion(questions[randomIndex])
+    setLoading(true)
+    setError('')
+    setCurrentQuestion(null)
+    try {
+      const res = await fetch('/api/generate-question', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          unit: questionBank[selectedUnit].name,
+          section: questionBank[selectedUnit].sections[selectedSection].name
+        })
+      })
+      if (!res.ok) throw new Error('Failed to fetch question')
+      const data = await res.json()
+      setCurrentQuestion(data)
+    } catch (err) {
+      setError('Could not generate question. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -137,11 +109,14 @@ export default function QuestionGenerator() {
             <button 
               onClick={generateQuestion}
               className={styles.generateButton}
+              disabled={loading}
             >
-              Generate Question
+              {loading ? 'Generating...' : 'Generate Question'}
             </button>
           )}
         </div>
+
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
 
         {currentQuestion && (
           <div className={styles.questionContainer}>
