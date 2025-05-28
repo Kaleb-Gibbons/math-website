@@ -1,4 +1,5 @@
 import Head from 'next/head'
+import Link from 'next/link'
 import styles from '../styles/Home.module.css'
 
 export default function Home() {
@@ -20,10 +21,10 @@ export default function Home() {
         </p>
 
         <div className={styles.grid}>
-          <div className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Explore our comprehensive math lessons and tutorials.</p>
-          </div>
+          <Link href="/question-generator" className={styles.card}>
+            <h2>Question Generator &rarr;</h2>
+            <p>Generate custom math problems with varying difficulty levels and topics.</p>
+          </Link>
 
           <div className={styles.card}>
             <h2>Practice &rarr;</h2>
